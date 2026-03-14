@@ -491,6 +491,7 @@ namespace crobot_hardware
             j["shoulder"] = (int)(shoulder_.cmd * RAD_TO_DEG);       // Just our desired angle?
             j["elbow"] = (int)(180.0 - shoulder_.cmd * RAD_TO_DEG);   // initial value - angle change(?)
             j["gripper"] = (int)(shoulder_.cmd * RAD_TO_DEG);     // open to angle set
+            j["flag"] = (int)(80.0 + flagdropper_.cmd * RAD_TO_DEG);
         }
 
         std::string j_str = j.dump() + "\n";

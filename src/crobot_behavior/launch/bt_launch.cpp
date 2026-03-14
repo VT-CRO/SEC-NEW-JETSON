@@ -15,6 +15,7 @@
 #include "crobot_behavior/action_nodes/embedded_mode.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "crobot_behavior/action_nodes/flag_dropper.hpp"
+#include "crobot_behavior/action_nodes/wait_seconds.hpp"
 
 int main(int argc, char** argv)
 {
@@ -101,6 +102,14 @@ int main(int argc, char** argv)
     "FlagDropper",
     [node](const std::string& name, const BT::NodeConfiguration& config) {
       return std::make_unique<FlagDropper>(name, config, node);
+    }
+  );
+
+  factory.registerBuilder<WaitSeconds>(
+    "WaitSeconds",
+    [node](const std::string& name, const BT::NodeConfiguration& config)
+    {
+        return std::make_unique<WaitSeconds>(name, config, node);
     }
   );
 
