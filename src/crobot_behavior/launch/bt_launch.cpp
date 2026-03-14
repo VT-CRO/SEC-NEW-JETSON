@@ -16,9 +16,6 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "crobot_behavior/action_nodes/flag_dropper.hpp"
 
-#include <behaviortree_cpp_v3/actions/wait_action.h>
-
-
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
@@ -106,8 +103,6 @@ int main(int argc, char** argv)
       return std::make_unique<FlagDropper>(name, config, node);
     }
   );
-
-  factory.registerNodeType<BT::WaitNode>("Wait");
 
   std::string pkg_path =
     ament_index_cpp::get_package_share_directory("crobot_behavior");

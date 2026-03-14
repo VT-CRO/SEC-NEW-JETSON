@@ -15,6 +15,7 @@ find_package(nav2_msgs REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(behaviortree_cpp_v3 REQUIRED)
 
 
 add_library(crobot_behavior_lib SHARED
@@ -56,6 +57,7 @@ add_executable(bt_launch
 target_link_libraries(bt_launch
   crobot_behavior_lib
 )
+
 
 ament_target_dependencies(bt_launch
   rclcpp
