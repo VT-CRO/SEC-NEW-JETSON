@@ -4,7 +4,7 @@
       <EmbeddedModeControl mode="write"/>
       <WaitForLight threshold="730"/>
       <!-- This is where you would launch the catapult-->
-      <!-- <PlayBag path="/ssd/olivia_test_ws/recordings/button_strafe_in_wall"/> -->
+      <PlayBag path="/ssd/olivia_test_ws/recordings/button_strafe_in_wall"/>
       <PlayBag path="/ssd/olivia_test_ws/recordings/flag_final_forward"/>
       <!-- This is where you would drop the flag -->
       <!-- <FlagDropper flag_command = "1.2217"/> -->

@@ -163,7 +163,7 @@ CrobotDriveController::command_interface_configuration() const
 
     config.names.push_back(params_.winch_joint + "/" + hardware_interface::HW_IF_VELOCITY);
 
-    config.names.push_back(params_.flagdropper_joint + "/" + hardware_interface::HW_IF_VELOCITY);
+    // config.names.push_back(params_.flagdropper_joint + "/" + hardware_interface::HW_IF_VELOCITY);
 
     return config;
 }
@@ -346,7 +346,7 @@ controller_interface::return_type CrobotDriveController::update(
     }
     command_interfaces_[8].set_value((*sweeper_pos)->data);
     command_interfaces_[9].set_value((*winch_vel)->data);
-    command_interfaces_[10].set_value(flag_cmd);
+    // command_interfaces_[10].set_value(flag_cmd);
 
     updateOdometry(time, period);
     return controller_interface::return_type::OK;

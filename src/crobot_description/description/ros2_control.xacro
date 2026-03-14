@@ -82,12 +82,11 @@
     <joint name="base_to_imu_joint">
       <state_interface   name="velocity"/>
     </joint>
-
+<!-- 
     <joint name="flagdropper_joint">
       <command_interface name="position"/>
       <state_interface name="position"/>
-      <!-- <state_interface name="velocity"/>  -->
-    </joint>
+    </joint> -->
   </ros2_control>
      
   <xacro:if value="$(arg sim_mode)">
