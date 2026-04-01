@@ -1,0 +1,79 @@
+from launch import LaunchDescription
+from launch.actions import (
+    IncludeLaunchDescription,
+    LogInfo,
+    TimerAction
+)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+
+    bringup_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('crobot_bringup'),
+                'launch',
+                'bringup_testing.launch.py'
+            ])
+        ])
+    )
+
+    vslam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('crobot_navigation'),
+                'launch',
+                'vslam.launch.py'
+            ])
+        ])
+    )
+
+    nvblox_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('crobot_navigation'),
+                'launch',
+                'nvblox.launch.py'
+            ])
+        ])
+    )
+
+    delayed_vslam = TimerAction(
+        period=5.0,      
+        actions=[
+            LogInfo(msg='Starting VSLAM...'),
+            vslam_launch,
+        ]
+    )
+
+    delayed_nvblox = TimerAction(
+        period=10.0,     
+        actions=[
+            LogInfo(msg='Starting NVBLOX...'),
+            nvblox_launch,
+        ]
+    )
+
+    foxglove_bridge = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        name="foxglove_bridge",
+        output="screen",
+        parameters=[{
+            "port": 8765,
+            "address": "0.0.0.0",   # important for remote laptop access
+            # "use_sim_time": True,  # uncomment if you want it to use sim time
+        }],
+    )
+
+    return LaunchDescription([
+        LogInfo(msg='Starting Bringup...'),
+        bringup_launch,
+        delayed_vslam,
+        delayed_nvblox,
+        foxglove_bridge
+    ])

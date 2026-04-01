@@ -5,46 +5,61 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(THIS_PACKAGE_INCLUDE_DEPENDS
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(controller_interface REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(realtime_tools REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+
+add_library(${PROJECT_NAME} SHARED
+  src/crobot_drive_controller.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(${PROJECT_NAME}
   controller_interface
-  generate_parameter_library
   geometry_msgs
   hardware_interface
   nav_msgs
   pluginlib
   rclcpp
   rclcpp_lifecycle
-  rcpputils
-  realtime_tools
-  tf2
-  tf2_msgs
-  tf2_geometry_msgs
+  realtime_tools  
+  tf2_ros
 )
 
-find_package(ament_cmake REQUIRED)
-foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
-  find_package(${Dependency} REQUIRED)
-endforeach()
-add_compile_definitions(RCPPUTILS_VERSION_MAJOR=${rcpputils_VERSION_MAJOR})
-add_compile_definitions(RCPPUTILS_VERSION_MINOR=${rcpputils_VERSION_MINOR})
+# Export plugin
+pluginlib_export_plugin_description_file(controller_interface
+crobot_controller_plugin.xml)
 
-generate_parameter_library(crobot_drive_controller_parameters
-  src/crobot_drive_controller_parameters.yaml
+install(TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
-add_library(crobot_controller SHARED
-  src/crobot_drive_controller.cpp
-  src/odometry.cpp
+install(DIRECTORY include/
+  DESTINATION include/
 )
-target_compile_features(crobot_controller PUBLIC cxx_std_17)
-target_include_directories(crobot_controller PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/crobot_controller>
+
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
 )
-target_link_libraries(crobot_controller PUBLIC crobot_drive_controller_parameters)
-ament_target_dependencies(crobot_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_compile_definitions(crobot_controller PRIVATE "CROBOT_CONTROL_BUILDING_DLL")
-pluginlib_export_plugin_description_file(controller_interface crobot_controller_plugin.xml)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -58,23 +73,17 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(
-  DIRECTORY launch config
-  DESTINATION share/${PROJECT_NAME}
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(
+  controller_interface
+  geometry_msgs
+  hardware_interface
+  nav_msgs
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+  realtime_tools
 )
 
-install(
-  DIRECTORY include/
-  DESTINATION include/crobot_controller
-)
-
-install(TARGETS crobot_controller crobot_drive_controller_parameters
-  EXPORT export_crobot_controller
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-)
-
-ament_export_targets(export_crobot_controller HAS_LIBRARY_TARGET)
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

@@ -1,139 +1,135 @@
-// Copyright 2021 ros2_control Development Team
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 #ifndef CROBOT_HARDWARE__DIFFBOT_SYSTEM_HPP_
 #define CROBOT_HARDWARE__DIFFBOT_SYSTEM_HPP_
 
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "hardware_interface/handle.hpp"
-#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
-#include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "rclcpp/clock.hpp"
-#include "rclcpp/duration.hpp"
-#include "rclcpp/macros.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "rclcpp_lifecycle/state.hpp"
-#include <nlohmann/json.hpp>
-
-#include "crobot_hardware/visibility_control.h"
-#include "crobot_hardware/wheel.hpp"
-#include "crobot_hardware/deadwheel_odom.hpp"
 #include "crobot_hardware/serial_comm.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/imu.hpp"
+#include "std_msgs/msg/string.hpp"
+
+#include "std_msgs/msg/int32.hpp"
 
 namespace crobot_hardware
 {
+    struct Motor
+    {
+        std::string name;
+        double pos = 0.0;
+        double vel = 0.0;
+        double cmd = 0.0;
+    };
 
-typedef enum {
-  REQUEST = 0,
-  WRITE = 1,
-  RESET = 2
-} comm_message_t;
+    struct Servo
+    {
+        std::string name;
+        double pos = 0.0;
+        double cmd = 0.0;
+    };
 
-typedef enum {
-  BIN_STOP = 0,
-  BIN_INGEST = 1,
-  BIN_EJECT = 3
-} bin_intake_state_t;
+    double imu_vel = 0.0;
 
-class CrobotHardware : public hardware_interface::SystemInterface
-{
+    class CrobotHardware : public hardware_interface::SystemInterface
+    {
+    public:
+        RCLCPP_SHARED_PTR_DEFINITIONS(CrobotHardware)
 
-struct Config
-{
-  std::string back_left_wheel_name = "";
-  std::string back_right_wheel_name = "";
-  std::string front_left_wheel_name = "";
-  std::string front_right_wheel_name = "";
-  float loop_rate = 0.0;
-  std::string device = "";
-  int baud_rate = 0;
-  int timeout_ms = 0;
-  int enc_counts_per_rev = 0;
-  int pid_p = 0;
-  int pid_d = 0;
-  int pid_i = 0;
-  int pid_o = 0;
-};
+        hardware_interface::CallbackReturn on_init(
+            const hardware_interface::HardwareInfo &info) override;
 
+        std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
-public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(CrobotHardware)
+        std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-  CROBOT_HARDWARE_PUBLIC
-  hardware_interface::CallbackReturn on_init(
-    const hardware_interface::HardwareInfo & info) override;
+        hardware_interface::CallbackReturn on_configure(
+            const rclcpp_lifecycle::State &previous_state) override;
 
-  CROBOT_HARDWARE_PUBLIC
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
+        hardware_interface::CallbackReturn on_cleanup(
+            const rclcpp_lifecycle::State &previous_state) override;
 
-  CROBOT_HARDWARE_PUBLIC
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+        hardware_interface::CallbackReturn on_activate(
+            const rclcpp_lifecycle::State &previous_state) override;
 
-  CROBOT_HARDWARE_PUBLIC
-  hardware_interface::CallbackReturn on_configure(
-    const rclcpp_lifecycle::State & previous_state) override;
+        hardware_interface::CallbackReturn on_deactivate(
+            const rclcpp_lifecycle::State &previous_state) override;
 
-  CROBOT_HARDWARE_PUBLIC
-  hardware_interface::CallbackReturn on_cleanup(
-    const rclcpp_lifecycle::State & previous_state) override;
+        hardware_interface::return_type read(
+            const rclcpp::Time &time, const rclcpp::Duration &period) override;
 
+        hardware_interface::return_type write(
+            const rclcpp::Time &time, const rclcpp::Duration &period) override;
 
-  CROBOT_HARDWARE_PUBLIC
-  hardware_interface::CallbackReturn on_activate(
-    const rclcpp_lifecycle::State & previous_state) override;
+    private:
+        struct Config
+        {
+            std::string wheel_fl_name;
+            std::string wheel_fr_name;
+            std::string wheel_bl_name;
+            std::string wheel_br_name;
 
-  CROBOT_HARDWARE_PUBLIC
-  hardware_interface::CallbackReturn on_deactivate(
-    const rclcpp_lifecycle::State & previous_state) override;
+            std::string ankle_fl_name;
+            std::string ankle_fr_name;
+            std::string ankle_bl_name;
+            std::string ankle_br_name;
 
-  CROBOT_HARDWARE_PUBLIC
-  hardware_interface::return_type read(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+            std::string sweeper_name;
+            std::string winch_name;
 
-  CROBOT_HARDWARE_PUBLIC
-  hardware_interface::return_type write(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+            // Added what I think is needed here for the arm servos and the flag servo
+            std::string shoulder_name;
+            std::string elbow_name;
+            std::string gripper_name;
+            std::string flagdropper_name;
 
-private:
+            std::string imu_name;
 
-  SerialComm comms_;
-  Config cfg_;
-  Wheel wheel_back_left;
-  Wheel wheel_back_right;
-  Wheel wheel_front_left;
-  Wheel wheel_front_right;
+            float max_wheel_speed_meters = 0.36; // m/s corresponding to full command (255)
+            float wheel_radius = 0.035;          // meters
 
-  double wheel_bl;
-  double wheel_br;
-  double wheel_fl;
-  double wheel_fr;
+            float loop_rate = 0.0;
+            std::string device = "";
+            int baud_rate = 115200;
+            int timeout_ms = 1000;
+        } cfg_;
 
-  DeadWheelOdom deadwheels;
+        enum class EmbeddedMode {
+            NORMAL,
+            CRATER_RUN,
+            LAUNCH_DRONE
+        };
+        EmbeddedMode embedded_mode_ = EmbeddedMode::NORMAL;
+        rclcpp::Subscription<std_msgs::msg::String>::SharedPtr mode_sub_;
+        rclcpp::Node::SharedPtr mode_node_;
 
-  double bin_intake = 0;
-  double lower_beacon = 0;
-  double run = 0;
-  double start_led = 0;
-  double sorting = 0;
+        // fl, fr, bl, br)
+        std::vector<Motor> wheels_;
+        std::vector<Servo> ankles_;
 
-};
+        Servo sweeper_;
+        Motor winch_;
 
-}  // namespace CROBOT_HARDWARE
+        // Defined the four new servos
+        Servo shoulder_;
+        Servo elbow_;
+        Servo gripper_;
+        Servo flagdropper_;
 
-#endif  // CROBOT_HARDWARE__DIFFBOT_SYSTEM_HPP_
+        SerialComm serial_comm_;
+
+        bool first_read_ = true;
+        int32_t last_ticks_fl_ = 0;
+        int32_t last_ticks_fr_ = 0;
+        // int32_t last_ticks_br_ = 0;
+
+        rclcpp::Node::SharedPtr imu_node_;
+        rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+        double imu_yaw_bias_ = 0.0;
+        int bias_sample_count_ = 0;
+        static constexpr int BIAS_SAMPLES = 60; // ~2 seconds at 100Hz
+        bool bias_calibrated_ = false;
+
+        rclcpp::Node::SharedPtr photoresistor_node_;
+        rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr photoresistor_pub_;
+    };
+}
+
+#endif // CROBOT_HARDWARE__DIFFBOT_SYSTEM_HPP_

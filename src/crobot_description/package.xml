@@ -4,11 +4,19 @@
   <name>crobot_description</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="jaysondv0928@gmail.com">ros</maintainer>
+  <maintainer email="mailtodaksh@vt.edu">root</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend> ros_gz_sim </depend>
+  <depend> gz_ros2_control </depend>
+  <depend> xacro </depend>
+  <depend> urdf </depend>
+  <depend> robot_state_publisher </depend>
+  <depend> ros2_control </depend>
+  <depend> ros2_controllers </depend>
+  
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

@@ -1,121 +1,137 @@
-/**
- * @file
- * @author Jayson De La Vega
- * @date 8/10/24
- * @brief This file contains the crobot controller declaration based on the ROS2 control framework. 
-            Adapted from https://github.com/ros-controls/ros2_controllers/tree/master/mecanum_drive_controller
- */
+#ifndef CROBOT_CONTROLLER__CROBOT_DRIVE_CONTROLLER_HPP_
+#define CROBOT_CONTROLLER__CROBOT_DRIVE_CONTROLLER_HPP_
 
-#ifndef CROBOT_CONTROL__CROBOT_DRIVE_CONTROLLER_HPP_
-#define CROBOT_CONTROL__CROBOT_DRIVE_CONTROLLER_HPP_
-
-#include <chrono>
-#include <cmath>
 #include <memory>
-#include <queue>
 #include <string>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "std_msgs/msg/float64.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include "tf2_ros/transform_broadcaster.h"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "odometry.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
-#include "realtime_tools/realtime_buffer.hpp"
-#include "realtime_tools/realtime_publisher.hpp"
-#include "tf2_msgs/msg/tf_message.hpp"
-
-#include "crobot_controller/visibility_control.h"
-#include "crobot_controller/odometry.hpp"
-#include <crobot_controller/crobot_drive_controller_parameters.hpp>
+#include "realtime_tools/realtime_buffer.h"
+#include "realtime_tools/realtime_publisher.h"
 
 namespace crobot_controller
 {
 
-    static constexpr size_t NUM_STATE_INTERFACES = 4;
-    static constexpr size_t NUM_CMD_INTERFACES = 4;
+class CrobotDriveController : public controller_interface::ControllerInterface
+{
+public:
+    CrobotDriveController();
 
-    class CrobotDriveController : public controller_interface::ControllerInterface
+    controller_interface::InterfaceConfiguration command_interface_configuration() const override;
+    controller_interface::InterfaceConfiguration state_interface_configuration() const override;
+
+    controller_interface::CallbackReturn on_init() override;
+    controller_interface::CallbackReturn on_configure(
+        const rclcpp_lifecycle::State & previous_state) override;
+    controller_interface::CallbackReturn on_activate(
+        const rclcpp_lifecycle::State & previous_state) override;
+    controller_interface::CallbackReturn on_deactivate(
+        const rclcpp_lifecycle::State & previous_state) override;
+
+    controller_interface::return_type update(
+        const rclcpp::Time & time, const rclcpp::Duration & period) override;
+
+private:
+    struct Params
     {
-        using Twist = geometry_msgs::msg::TwistStamped;
+        std::vector<std::string> wheel_joints;  // [fl, fr, bl, br]
+        std::vector<std::string> ankle_joints;  // [fl, fr, bl, br]
 
-    public:
-        CROBOT_CONTROL_PUBLIC
-        CrobotDriveController();
+        std::string sweeper_joint;
+        std::string winch_joint;
 
-        CROBOT_CONTROL_PUBLIC
-        controller_interface::InterfaceConfiguration command_interface_configuration() const override;
+        std::string imu_joint;
+        std::string flagdropper_joint;
 
-        CROBOT_CONTROL_PUBLIC
-        controller_interface::InterfaceConfiguration state_interface_configuration() const override;
+        // Robot geometry (meters)
+        double wheel_separation_width  = 0.150;   // left-right wheel spacing
+        double wheel_separation_length = 0.230;   // front-back wheel spacing
+        double wheel_radius            = 0.035;   // wheel radius
 
-        CROBOT_CONTROL_PUBLIC
-        controller_interface::return_type update(
-            const rclcpp::Time &time, const rclcpp::Duration &period) override;
+        // Estimated maximum servo slew rate (rad/s); tune to match physical servo speed
+        double assumed_servo_speed_ = 1.57;
 
-        CROBOT_CONTROL_PUBLIC
-        controller_interface::CallbackReturn on_init() override;
+        // Swerve optimization
+        double max_ankle_angle = M_PI / 2.0;      // hard limit from servo range
 
-        CROBOT_CONTROL_PUBLIC
-        controller_interface::CallbackReturn on_configure(
-            const rclcpp_lifecycle::State &previous_state) override;
+        // Velocity limits
+        double max_linear_velocity  = 1.5;   // m/s
+        double max_angular_velocity = 1.5;   // rad/s
 
-        CROBOT_CONTROL_PUBLIC
-        controller_interface::CallbackReturn on_activate(
-            const rclcpp_lifecycle::State &previous_state) override;
+        // Odometry
+        bool        enable_odom_tf  = true;
+        std::string odom_frame_id   = "odom";
+        std::string base_frame_id   = "base_link";
 
-        CROBOT_CONTROL_PUBLIC
-        controller_interface::CallbackReturn on_deactivate(
-            const rclcpp_lifecycle::State &previous_state) override;
+        // Topics
+        std::string cmd_vel_topic = "/cmd_vel";
+        std::string odom_topic    = "~/odom";
+        std::string sweeper_topic = "/sweeper_position_controller/commands";
+        std::string winch_topic   = "/winch_velocity_controller/commands";
+        std::string flagdropper_topic = "/flagdropper_controller/commands";
 
-        using ControllerReferenceMsg = geometry_msgs::msg::TwistStamped;
-        using OdomStateMsg = nav_msgs::msg::Odometry;
-        using TFStateMsg = tf2_msgs::msg::TFMessage;
+        // Ankle angle limits (radians)
+        std::vector<double> ankle_min_angles = {-1.885, -0.524, -0.436, -1.728};  // [FL, FR, BL, BR]
+        std::vector<double> ankle_max_angles = { 0.471,  1.676,  1.920,  0.628};
+    } params_;
 
-    protected:
+    // Command velocity subscriber
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+    realtime_tools::RealtimeBuffer<std::shared_ptr<geometry_msgs::msg::Twist>> received_cmd_vel_;
+
+    // Sweeper position subscriber
+    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr sweeper_sub_;
+    realtime_tools::RealtimeBuffer<std::shared_ptr<std_msgs::msg::Float64>> received_sweeper_pos_;
     
-        std::shared_ptr<ParamListener> param_listener_;
-        Params params_;
+    // Winch velocity subscriber
+    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr winch_sub_;
+    realtime_tools::RealtimeBuffer<std::shared_ptr<std_msgs::msg::Float64>> received_winch_vel_;
 
-        enum WheelIndex : std::size_t
-        {
-            FRONT_LEFT = 0,
-            FRONT_RIGHT = 1,
-            REAR_RIGHT = 2,
-            REAR_LEFT = 3
-        };
+    // flag dropper subscriber
+    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr flagdropper_sub_;
+    realtime_tools::RealtimeBuffer<std::shared_ptr<std_msgs::msg::Float64>> received_flagdropper_pos_;
 
-        enum DeadWheelIndex : std::size_t
-        {
-            DEADWHEEL_LEFT = 0,
-            DEADWHEEL_RIGHT = 1,
-            DEADWHEEL_CENTER = 2,
-            DEADWHEEL_HEADING = 3
-        };
+    // Odometry publisher
+    std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::msg::Odometry>> odom_pub_;
 
-        std::vector<std::string> command_joint_names_;
-        std::vector<std::string> state_joint_names_;
+    // TF broadcaster
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
-        rclcpp::Subscription<ControllerReferenceMsg>::SharedPtr ref_cmd_subscriber_ = nullptr;
-        realtime_tools::RealtimeBuffer<std::shared_ptr<ControllerReferenceMsg>> input_ref_;
-        rclcpp::Duration ref_timeout_ = rclcpp::Duration::from_seconds(0.0);
+    // Odometry state
+    struct OdomState
+    {
+        double x = 0.0, y = 0.0, theta = 0.0;
+        double linear_x = 0.0, linear_y = 0.0, angular_z = 0.0;
+        rclcpp::Time timestamp;
+    } odom_state_;
 
-        using OdomStatePublisher = realtime_tools::RealtimePublisher<OdomStateMsg>;
-        rclcpp::Publisher<OdomStateMsg>::SharedPtr odom_state_publisher_;
-        std::unique_ptr<OdomStatePublisher> rt_odom_state_publisher_;
-
-        using TfStatePublisher = realtime_tools::RealtimePublisher<TFStateMsg>;
-        rclcpp::Publisher<TFStateMsg>::SharedPtr tf_odom_state_publisher_;
-        std::unique_ptr<TfStatePublisher> rt_tf_odom_state_publisher_;
-
-        Odometry odometry_;
-
-        void reference_callback(const std::shared_ptr<ControllerReferenceMsg> msg);
-
-        double velocity_in_center_frame_linear_x_;
-        double velocity_in_center_frame_linear_y_;
-        double velocity_in_center_frame_angular_z_;
+    // Per-wheel swerve module command
+    struct WheelAnkleCommand
+    {
+        std::vector<double> ankle_angles;  // [fl, fr, bl, br] radians
+        std::vector<double> wheel_vels;    // [fl, fr, bl, br] rad/s
     };
-}
 
-#endif
+    WheelAnkleCommand computeSwerve(double linear_x, double linear_y, double angular_z);
+
+    // Odometry
+    void updateOdometry(const rclcpp::Time & time, const rclcpp::Duration & period);
+    void resetOdometry();
+
+    double normalizeAngle(double angle);
+
+    // Open-loop ankle angle tracking (servos have no position feedback)
+    std::vector<double> assumed_ankle_angles_ = {0.0, 0.0, 0.0, 0.0};
+};
+
+}  // namespace crobot_controller
+
+#endif  // CROBOT_CONTROLLER__CROBOT_DRIVE_CONTROLLER_HPP_

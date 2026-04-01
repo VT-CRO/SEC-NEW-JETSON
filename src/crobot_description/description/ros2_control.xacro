@@ -1,131 +1,109 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="https://www.ros.org/wiki/xacro">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">  
+  <ros2_control name="Crobot" type="system">
+    <hardware>
+      <!-- <xacro:if value="$(arg sim_mode)">
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </xacro:if> -->
+      <xacro:if value="$(arg sim_mode)">
+        <plugin>ign_ros2_control/IgnitionSystem</plugin>
+      </xacro:if>
+      <xacro:unless value="$(arg sim_mode)">
+        <plugin>crobot_hardware/CrobotHardware</plugin>
 
-    <xacro:unless value="$(arg sim_mode)">
-        <ros2_control name="Crobot" type="system">
-            <hardware>
-                <plugin>crobot_hardware/CrobotHardware</plugin>
-                
-                <param name="front_left_wheel_name">front_left_wheel_joint</param>
-                <param name="back_left_wheel_name">back_left_wheel_joint</param>
-                <param name="front_right_wheel_name">front_right_wheel_joint</param>
-                <param name="back_right_wheel_name">back_right_wheel_joint</param>
-                <param name="loop_rate">30.0</param>
-                <param name="dev">/dev/ttyTHS1</param>
-                <param name="baud_rate">115200</param>
-                <param name="timeout_ms">1000</param>
-                <param name="enc_counts_per_rev">3450</param>
-            </hardware>
+        <param name="front_left_wheel_name">front_left_wheel_joint</param>
+        <param name="front_right_wheel_name">front_right_wheel_joint</param>
+        <param name="back_left_wheel_name">back_left_wheel_joint</param>
+        <param name="back_right_wheel_name">back_right_wheel_joint</param>
 
-            <joint name="front_left_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
+        <param name="front_left_ankle_name">front_left_ankle_joint</param>
+        <param name="front_right_ankle_name">front_right_ankle_joint</param>
+        <param name="back_left_ankle_name">back_left_ankle_joint</param>
+        <param name="back_right_ankle_name">back_right_ankle_joint</param>
 
-                <state_interface name="position"/>
-                <state_interface name="velocity"/>
-            </joint>
+        <param name="imu_name">base_to_imu_joint</param>
 
-            <joint name="front_right_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
+        <param name="sweeper_name">sweeper_joint</param>
+        <param name="winch_name">winch_joint</param>
+        <param name="flagdropper_name">flagdropper_joint</param>
 
-                <state_interface name="position"/>
-                <state_interface name="velocity"/>
-            </joint>
+        <!-- TODO: Confirm parameters -->
+        <param name="loop_rate">30.0</param>
+        <param name="dev">/dev/ttyTHS1</param> <!-- ttyTHS1 for uart1; ttyACM0 for usb-->
+        <param name="baud_rate">115200</param>
+        <param name="timeout_ms">5</param>
+        <param name="wheel_radius">0.035</param> <!-- meters -->
+        <param name="max_wheel_speed_meters">0.36</param> <!-- m/s corresponding to full command (255) -->
+      </xacro:unless>
+    </hardware>
+    <joint name="front_left_ankle_joint">
+      <command_interface name="position"/>
+      <!-- <state_interface   name="position"/> -->
+    </joint>
+    <joint name="front_right_ankle_joint">
+      <command_interface name="position"/>
+      <!-- <state_interface   name="position"/> -->
+    </joint>
+    <joint name="back_left_ankle_joint">
+      <command_interface name="position"/>
+      <!-- <state_interface   name="position"/> -->
+    </joint>
+    <joint name="back_right_ankle_joint">
+      <command_interface name="position"/>
+      <!-- <state_interface   name="position"/> -->
+    </joint>
+    <joint name="front_left_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface   name="velocity"/>
+      <state_interface   name="position"/>
+    </joint>
+    <joint name="front_right_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface   name="velocity"/>
+      <state_interface   name="position"/>
+    </joint>
+    <joint name="back_left_wheel_joint">
+      <command_interface name="velocity"/>
+      <!-- <state_interface   name="velocity"/> -->
+      <!-- <state_interface   name="position"/> -->
+    </joint>
+    <joint name="back_right_wheel_joint">
+      <command_interface name="velocity"/>
+      <!-- <state_interface   name="velocity"/> -->
+      <!-- <state_interface   name="position"/> -->
+    </joint>
+    <joint name="sweeper_joint">
+      <command_interface name="position"/>
+      <!-- <state_interface   name="position"/> -->
+    </joint>
+    <joint name="winch_joint">
+      <command_interface name="velocity"/>
+      <!-- <state_interface   name="velocity"/> -->
+    </joint>
+    <joint name="base_to_imu_joint">
+      <state_interface   name="velocity"/>
+    </joint>
 
-            <joint name="back_left_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
-
-                <state_interface name="position"/>
-                <state_interface name="velocity"/>
-            </joint>
-
-            <joint name="back_right_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
-
-                <state_interface name="position"/>
-                <state_interface name="velocity"/>
-            </joint>
-
-            <sensor name="deadwheel_odom">
-                <state_interface name="encoder_left"/>
-                <state_interface name="encoder_right"/>
-                <state_interface name="encoder_center"/>
-            </sensor>
-
-            <gpio name="crobot_systems">
-                <command_interface name="bin_intake"/>
-                <command_interface name="beacon"/>
-                <command_interface name="start_robot"/>
-                <command_interface name="sorting"/>
-                <state_interface name="start_led">
-                    <param name="initial_value">0.0</param>
-                </state_interface>
-            </gpio>
-        </ros2_control>
-    </xacro:unless>
-
-    <xacro:if value="$(arg sim_mode)">
-        <ros2_control name="GazeboSystem" type="system">
-            <hardware>
-                <plugin>gazebo_ros2_control/GazeboSystem</plugin>
-            </hardware>
-            <joint name="front_left_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
-
-                <state_interface name="velocity"/>
-                <state_interface name="position"/>
-            </joint>
-
-            <joint name="front_right_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
-
-                <state_interface name="velocity"/>
-                <state_interface name="position"/>
-            </joint>
-
-            <joint name="back_left_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
-
-                <state_interface name="velocity"/>
-                <state_interface name="position"/>
-            </joint>
-
-            <joint name="back_right_wheel_joint">
-                <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
-                </command_interface>
-
-                <state_interface name="velocity"/>
-                <state_interface name="position"/>
-            </joint>
-        </ros2_control>
-
-        <gazebo>
-            <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-                <parameters>$(find crobot_controller)/config/ros2_control.yaml</parameters>
-                <parameters>$(find crobot_controller)/config/gazebo_ros2_control_use_sim.yaml</parameters>
-            </plugin>
-        </gazebo>
-    </xacro:if>
+    <joint name="flagdropper_joint">
+      <command_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+     
+  <xacro:if value="$(arg sim_mode)">
+    <gazebo>
+      <!-- <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find crobot_controller)/config/gazebo_ros2_control_use_sim.yaml</parameters>
+      </plugin> -->
+      <plugin filename="ign_ros2_control-system" 
+            name="ign_ros2_control::IgnitionROS2ControlPlugin">
+      <parameters>$(find crobot_controller)/config/gazebo_ros2_control_use_sim.yaml</parameters>
+      </plugin>
+      <plugin filename="ignition-gazebo-odometry-publisher-system"
+            name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+      <odom_publish_frequency>50</odom_publish_frequency>
+    </plugin>
+    </gazebo>
+  </xacro:if>
 </robot>

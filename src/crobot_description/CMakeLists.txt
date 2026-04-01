@@ -7,6 +7,8 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(gz_ros2_control REQUIRED)
+find_package(ros_gz_sim REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -23,9 +25,9 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(
-  DIRECTORY launch description
-  DESTINATION share/${PROJECT_NAME}
+install (
+  DIRECTORY rviz description launch 
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 ament_package()
