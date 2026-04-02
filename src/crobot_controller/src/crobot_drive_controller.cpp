@@ -254,11 +254,12 @@ controller_interface::return_type CrobotDriveController::update(
         return controller_interface::return_type::OK;
     }
 
-    double flag_cmd = 0.0;
-    if (flagdropper_pos && *flagdropper_pos)
-    {
-        flag_cmd = (*flagdropper_pos)->data;
+    double last_flagdropper_cmd_ = 0.0;
+    if (flagdropper_pos && *flagdropper_pos) {
+        last_flagdropper_cmd_ = (*flagdropper_pos)->data;
     }
+
+    command_interfaces_[10].set_value(last_flagdropper_cmd_);
 
     double linear_x = std::clamp((*cmd_vel)->linear.x,
         -params_.max_linear_velocity, params_.max_linear_velocity);
@@ -346,7 +347,6 @@ controller_interface::return_type CrobotDriveController::update(
     }
     command_interfaces_[8].set_value((*sweeper_pos)->data);
     command_interfaces_[9].set_value((*winch_vel)->data);
-    command_interfaces_[10].set_value(flag_cmd);
 
     updateOdometry(time, period);
     return controller_interface::return_type::OK;

@@ -15,9 +15,7 @@
 #include "crobot_behavior/action_nodes/embedded_mode.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "crobot_behavior/action_nodes/flag_dropper.hpp"
-
-#include <behaviortree_cpp_v3/actions/wait_action.h>
-
+#include "crobot_behavior/action_nodes/wait_seconds.hpp"
 
 int main(int argc, char** argv)
 {
@@ -107,7 +105,13 @@ int main(int argc, char** argv)
     }
   );
 
-  factory.registerNodeType<BT::WaitNode>("Wait");
+  factory.registerBuilder<WaitSeconds>(
+    "WaitSeconds",
+    [node](const std::string& name, const BT::NodeConfiguration& config)
+    {
+        return std::make_unique<WaitSeconds>(name, config, node);
+    }
+  );
 
   std::string pkg_path =
     ament_index_cpp::get_package_share_directory("crobot_behavior");

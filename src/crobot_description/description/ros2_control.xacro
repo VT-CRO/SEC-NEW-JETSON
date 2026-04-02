@@ -25,9 +25,7 @@
 
         <param name="sweeper_name">sweeper_joint</param>
         <param name="winch_name">winch_joint</param>
-        <joint name="flagdropper_joint">
-          <command_interface name="velocity"/>
-        </joint>
+        <param name="flagdropper_name">flagdropper_joint</param>
 
         <!-- TODO: Confirm parameters -->
         <param name="loop_rate">30.0</param>
@@ -84,6 +82,10 @@
     </joint>
     <joint name="base_to_imu_joint">
       <state_interface   name="velocity"/>
+    </joint>
+
+    <joint name="flagdropper_joint">
+      <command_interface name="velocity"/>
     </joint>
   </ros2_control>
      
