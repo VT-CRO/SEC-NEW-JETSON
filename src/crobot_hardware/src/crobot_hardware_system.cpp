@@ -263,6 +263,12 @@ namespace crobot_hardware
                 else if (msg->data == "launchDrone") {
                     embedded_mode_ = EmbeddedMode::LAUNCH_DRONE;
                 }
+                else if (msg->data == "openArm") {
+                    embedded_mode_ = EmbeddedMode::OPEN_ARM;
+                }
+                else if (msg->data == "closeArm") {
+                    embedded_mode_ = EmbeddedMode::CLOSE_ARM;
+                }
                 else if (msg->data == "write") {
                     embedded_mode_ = EmbeddedMode::NORMAL;
                 }
@@ -464,6 +470,10 @@ namespace crobot_hardware
             j["cmd"] = "craterRun";
         } else if (embedded_mode_ == EmbeddedMode::LAUNCH_DRONE) {
             j["cmd"] = "launchDrone";
+        } else if (embedded_mode_ == EmbeddedMode::OPEN_ARM) {
+            j["cmd"] = "openArm";
+        } else if (embedded_mode_ == EmbeddedMode::CLOSE_ARM) {
+            j["cmd"] = "closeArm";
         } else {
             j["cmd"] = "write";
 
