@@ -35,6 +35,11 @@ To control the winch, use the command below, and change the data value to whatev
 ros2 topic pub --once /winch_velocity_controller/commands std_msgs/msg/Float64 "{data: 0.35}"
 ```
 
+To control the flag dropper, use the following command
+```
+ros2 topic pub --once /flagdropper_controller/commands std_msgs/msg/Float64 "{data: 1.2217}"
+```
+
 I don't recommend using this right now, but you can initiate the crater run sequence with the following.
 ```
 ros2 topic pub --once /crobot_embedded_mode std_msgs/msg/String "data: craterRun"
