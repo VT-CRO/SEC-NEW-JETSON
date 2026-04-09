@@ -27,7 +27,7 @@ Instructions of what keys to use for teleop should show up in your terminal.
 
 To control the sweeper, use the following and adjust the data value in radians. 3.0 will move the sweeper all the way up.
 ```
-ros2 topic pub --once /sweeper_position_controller/commands std_msgs/msg/Float64MultiArray "{data: [3.0]}"
+ros2 topic pub --once /sweeper_position_controller/commands std_msgs/msg/Float64 "{data: 2.5}"
 ```
 
 To control the winch, use the command below, and change the data value to whatever velocity you want.
