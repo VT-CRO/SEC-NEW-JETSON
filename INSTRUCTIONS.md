@@ -43,6 +43,9 @@ ros2 topic pub --once /winch_velocity_controller/commands std_msgs/msg/Float64 "
 ros2 topic pub --once /flagdropper_controller/commands std_msgs/msg/Float64 "{data: 1.2217}"
 ```
 
+> [!NOTE]
+> The next few commands will change the embedded mode, i.e. the jetson will not be able to send write commands to the Teensy, temporarily disabling teleop until you change the mode back to "write."
+
 ### Arm
 Change the embedded mode based on whether you want to open/close
 ```
