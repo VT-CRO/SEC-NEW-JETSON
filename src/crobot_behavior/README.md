@@ -1,49 +1,52 @@
-# Crobot_behaviorTree
-Behavior Tree for Crobot. Defines and execute commands using the behaviortree package and Nav2
+# Crobot Behavior
+## Purpose
+This package implements a behavior tree that allows us to implement high-level task sequences made up of custom actions nodes.
 
-## Launching the Behavior Tree
-Launch:
-```
-ros2 launch PATH-TO-CROBOT-BRINGUP/launch/behavior.launch.py
-```
-The following line will launch bt_launch.cpp, alongside other supplements.
-
-In addition, you can run:
-```
-ros2 launch rviz2
-```
-to see the robot and plot paths manually.
-
-## Behavior Tree Overview
-The behavior tree defines the decision the robot will make autonomously. This is done through a command-server structure.
-
-### Structure
-- The behavior tree package provides a skeleton for the command.
-- A command is defined in src/action_nodes, using the provided inheritance structure from behaviortree package.
-- Each command is then registered in launch/bt_launch.cpp through the BehaviorTreeFactory, provided by behaviortree package.
-- Each command is then passed to the robot through the xml files located in the "trees" directory using XML tags.
-
-
-
-## Testing without a robot
-To test the behavior tree without a robot, we can use the ros2 provided turtlebot for simulation.
-
-1. Export the turtlebot model
-```
-export TURTLEBOT3_MODEL=burger
+## Role Within Wider System
+```text
+Behavior Tree / Nav2
+        |
+        v
+/cmd_vel and mechanism command topics
+        |
+        v
+crobot_controller/CrobotDriveController
+        |
+        v
+ros2_control command interfaces
+        |
+        v
+crobot_hardware hardware interface
+        |
+        v
+motors / servos / embedded hardware
 ```
 
-2. Launch the Gazebo
-```
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
-```
+## Main Executable
+### `bt_launch`
 
-3. Launch the Navigation Server
-```
-ros2 launch turtlebot3_navigation2 navigation2.launch.py   use_sim_time:=True   params_file:=/home/ros/ws/SEC-NEW-JETSON/src/crobot_behavior/config/nav2_params.yaml
-```
+Note that this file (`launch/bt_launch.ccp`) is a c++ executable, not a Python launch file. It does the following:
 
-4. Launch the behavior tree
+- Creates a ros node names `bt_launch`
+- Creates a `NavigationServer` node named `crobot_navigation`
+- Creates a BehaviorTree.CPP "factory"
+- Registers the custom behavior nodes (`GoToPose`, `SweeperControl`,`EmbeddedModeControl`, etc.)
+- Loads the XML tree from `trees/default.xml`
+- Ticks the tree at 20 Hz
+- Calls `rclcpp::spin_some` so ROS callbacks can run while the tree is ticking
+- Publishes several zero `/cmd_vel` messages when the tree finishes or fails, so the robot stops moving when done
+
+Also, note that the default tree path is hardcoded:
+```cpp
+std::string xml_path = pkg_path + "/trees/default.xml";
 ```
-ros2 launch src/crobot_bringup/launch/bringup.launch.py
-```
+So, if you want to use a different xml file, just change that line.
+
+## How to Add New Behaviors
+1. Create header file in `src/crobot_behavior/include/crobot_behavior/action_nodes` directory
+2. Create source file in `src/crobot_behavior/src/action_nodes` directory
+3. Determine whether your behavior needs to be a `BT::SyncActionNode`, `BT::StatefulActionNode`, or `BT::ConditionNode`
+4. Add your `.cpp` file to the CMake
+5. Register this node in `bt_launch.cpp` following the same conventions as the others
+
+Use `StatefulActionNode` for actions that take multiple ticks, such as waiting, driving for a certain amount time, or waiting for the result of another action. Use `SyncActionNode` for actions that complete immediately, and `ConditionNode` for true/false checks. Read the [C++ behavior tree documentation](https://www.behaviortree.dev/docs/intro) for more information. 
