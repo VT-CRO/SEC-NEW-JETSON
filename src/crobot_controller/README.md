@@ -119,7 +119,7 @@ The Crobot Hardware package has the hardware interfaces that are controlled by t
 Gaebo provides simulated ros2 control hardware interfaces, so the controller can be used for simulated joints
 
 # How to Edit This Package
-## Editing Robot Geometru
+## Editing Robot Geometry
 
 Edit these parameters in the yaml file(s):
 
