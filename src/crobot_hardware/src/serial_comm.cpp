@@ -1,5 +1,7 @@
+/**
+ * Boilerplate file for Teensie communication
+*/
 #include "crobot_hardware/serial_comm.hpp"
-
 #include <termios.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -15,7 +17,15 @@ namespace crobot_hardware
     {
         disconnect();
     }
-
+    /**
+     * Opens the Jetson UART port
+     * 
+     * @param device_path the path to the Jetson's UART port
+     * @param baud_rate the baud rate
+     * @param timeout_ms the seconds before timing out
+     * 
+     * @return true if successful, false if otherwise
+    */
     bool SerialComm::connect(const std::string &device_path, int baud_rate, int timeout_ms)
     {
         RCLCPP_INFO(rclcpp::get_logger("SerialComm"), 
@@ -40,7 +50,6 @@ namespace crobot_hardware
 
         tcflush(fd_, TCIOFLUSH);
 
-        // TODO: Confirm serial port flags
 
         tty.c_cflag &= ~PARENB;         // No parity
         tty.c_cflag &= ~CSTOPB;         // 1 stop bit
@@ -62,6 +71,7 @@ namespace crobot_hardware
         tty.c_cc[VMIN]  = VMIN;         
         tty.c_cc[VTIME] = 0;            // no read timeout
 
+        /* Sets the baud rates */
         speed_t speed;
         switch (baud_rate) {
             case 9600: speed = B9600; break;
@@ -96,6 +106,9 @@ namespace crobot_hardware
         return true;
     }
 
+    /**
+     * Closes the Jetson's UART port to the Teensie
+    */
     void SerialComm::disconnect()
     {
         if (isConnected()) {
@@ -105,11 +118,24 @@ namespace crobot_hardware
         }
     }
 
+    /**
+     * Checks if the Jetson is connected to the Teensie
+     * 
+     * @return true if successful, false if otherwise.
+    */
     bool SerialComm::isConnected() const
     {
         return fd_ != INVALID_FD;
     }
 
+    /**
+     * Writes to the teensie
+     * 
+     * @param bytes a pointer to the bytes to write
+     * @param numBytes the number of bytes to write
+     * 
+     * @return the number of bytes written, or -1 if it failed
+    */
     int SerialComm::writeBytes(const char *bytes, int numBytes)
     {
         if (!isConnected()) {
@@ -133,6 +159,14 @@ namespace crobot_hardware
         return bytesWritten;
     }
 
+    /**
+     * Read the bytes recieved from the teensie
+     * 
+     * @param buff a pointer to the buffer (bytes recieved from the teensie)
+     * @param numBytes the number of bytes to read
+     * 
+     * @return the numbers of bytes read, or -1 if it failed
+    */
     int SerialComm::readBytes(char *buff, int numBytes)
     {
         if (!isConnected()) {
@@ -173,6 +207,9 @@ namespace crobot_hardware
         return bytesRead;
     }
 
+    /**
+     * TODO: i got no idea what this does besides "readLine". Evan do this one
+    */
     std::string SerialComm::readLine()
     {
         char tmp[64];
@@ -196,6 +233,9 @@ namespace crobot_hardware
         return "";
     }
 
+    /**
+     * Clears the message buffer from the teensie
+    */
     void SerialComm::clearBuffers()
     {
         if (isConnected()) {

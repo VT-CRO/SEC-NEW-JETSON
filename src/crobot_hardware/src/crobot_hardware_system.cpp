@@ -1,5 +1,7 @@
+/**
+ * Manages the communication between the Jetson and the Teensie through JSON communication
+*/
 #include "crobot_hardware/crobot_hardware_system.hpp"
-
 #include <string>
 #include <algorithm>
 #include <nlohmann/json.hpp>
@@ -16,7 +18,7 @@ namespace crobot_hardware
     /**
      * Initalizes the hardware interface
      * 
-     * @param info the robot's information, passed in from INCLUDE LOCATION HERE
+     * @param info the robot's information, passed in from TODO: INCLUDE LOCATION HERE
     */
     hardware_interface::CallbackReturn CrobotHardware::on_init(
         const hardware_interface::HardwareInfo &info)
@@ -233,7 +235,6 @@ namespace crobot_hardware
         first_read_ = true; // Reset first read flag on activation
         last_ticks_fl_ = 0;
         last_ticks_fr_ = 0;
-        // last_ticks_br_ = 0;
 
         for (int i = 0; i < 4; ++i)
         {
@@ -294,11 +295,6 @@ namespace crobot_hardware
         {
             return hardware_interface::return_type::ERROR;
         }
-
-        // json j;
-        // j["cmd"] = "read";
-        // std::string j_str = j.dump() + "\n";
-        // serial_comm_.writeBytes(j_str.c_str(), j_str.size());
 
         //reads the JSON file from the teensie as a string.
         std::string line = serial_comm_.readLine();
@@ -399,6 +395,14 @@ namespace crobot_hardware
         return hardware_interface::return_type::OK;
     }
 
+    /**
+     * Writes to the teensie to execute commands
+     * 
+     * @param time the current elapsed time of the robot since startup
+     * @param period the current elapsed time of the hardawre interface since communication with the Teensie
+     * 
+     * @return SUCCESS if successful, ERROR otherwise
+    */
     hardware_interface::return_type CrobotHardware::write(
         const rclcpp::Time &time, const rclcpp::Duration &period)
     {
@@ -413,8 +417,8 @@ namespace crobot_hardware
         }
 
         json j;
-        // j["cmd"] = "write";
 
+        /* Writes to the "cmd" key for the teensie to execute*/
         if (embedded_mode_ == EmbeddedMode::CRATER_RUN) {
             j["cmd"] = "craterRun";
         } else if (embedded_mode_ == EmbeddedMode::LAUNCH_DRONE) {
@@ -428,7 +432,7 @@ namespace crobot_hardware
 
             const double RAD_TO_DEG = 180.0 / M_PI;
             const float hardware_conversion_factor = 0.9;
-
+            /* Writes to the wheel states */
             j["ankles"]["front_left"] = (int)(130.0 + ankles_[0].cmd * RAD_TO_DEG / hardware_conversion_factor);
             j["ankles"]["front_right"] = (int)(53.0 + ankles_[1].cmd * RAD_TO_DEG / hardware_conversion_factor);
             j["ankles"]["back_left"] = (int)(57.0 + ankles_[2].cmd * RAD_TO_DEG / hardware_conversion_factor);
@@ -444,8 +448,6 @@ namespace crobot_hardware
             j["sweeper"] = (int)(40.0 + sweeper_.cmd * RAD_TO_DEG);
             j["winch"] = std::clamp((int)(winch_.cmd * 255.0), -255, 255);
 
-            // You may want to take the time to validate how I define these, I'm really freaking tired :(
-            // I have code in Crobot.ino that defines my thoughts a bit more clearly- probably worth a read?
             j["flag"] = (int)(80.0 + flagdropper_.cmd * RAD_TO_DEG); // initial value + angle change(?)
             j["shoulder"] = (int)(shoulder_.cmd * RAD_TO_DEG);       // Just our desired angle?
             j["elbow"] = (int)(180.0 - shoulder_.cmd * RAD_TO_DEG);   // initial value - angle change(?)
@@ -455,8 +457,7 @@ namespace crobot_hardware
 
         std::string j_str = j.dump() + "\n";
 
-        // RCLCPP_INFO(rclcpp::get_logger("CrobotHardware"), "Sending JSON: %s", j_str.c_str());
-        // RCLCPP_INFO(rclcpp::get_logger("CrobotHardware"), "Sweeper position: %d", (int)(40.0 + sweeper_.cmd * RAD_TO_DEG));
+        /* Sends the JSON file over to the hardware through UART (?)*/
 
         int bytesSent = serial_comm_.writeBytes(j_str.c_str(), j_str.size());
 

@@ -1,3 +1,4 @@
+/* Node that plays a ros bag */
 #include <cstdlib>
 #include "crobot_behavior/action_nodes/get_that_bag.hpp"
 

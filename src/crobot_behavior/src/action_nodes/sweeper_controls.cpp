@@ -1,3 +1,4 @@
+/* Node that controls the sweeper */
 #include "crobot_behavior/action_nodes/sweeper_controls.hpp"
 #include <string>
 

@@ -1,5 +1,5 @@
+/* Node that waits for the light to blink ontop of the antenna */
 #include "crobot_behavior/action_nodes/wait_for_light.hpp"
-
 WaitForLight::WaitForLight(
     const std::string& name,
     const BT::NodeConfiguration& config,

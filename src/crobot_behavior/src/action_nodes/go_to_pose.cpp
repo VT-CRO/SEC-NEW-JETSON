@@ -1,3 +1,4 @@
+/* Moves the robot when given a specific global coordinate position. Uses the NAV2 pathplanning server */
 #include <chrono>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -18,7 +19,6 @@ GoToPose::GoToPose(const std::string &name,
 
 }
 
-//might need this later to update position on the field also
 BT::PortsList GoToPose::providedPorts()   
 {
     return {
@@ -40,6 +40,7 @@ BT::NodeStatus GoToPose::onStart() {
         throw BT::RuntimeError("Missing required input [goal]");
     }
 
+    /* Parses through the string to get each coordinate from the command */
     auto pose_split_string = BT::splitString(pose_strings, ';');
     //resize the vector for the points
     goal.poses.resize(pose_split_string.size());
@@ -56,13 +57,14 @@ BT::NodeStatus GoToPose::onStart() {
             "Invalid format. Expected x,y,yaw");
         }
 
+        /* Converts string values into doubles to */
         double x = std::stod(std::string(values[0]));
         double y = std::stod(std::string(values[1]));
         double yaw = std::stod(std::string(values[2]));
         RCLCPP_INFO(node_ptr_->get_logger(), "X: [%s], Y:[%s]",
         std::to_string(x).c_str(), std::to_string(y).c_str());
 
-        
+        /* Assigns each attribute of the pose struct in the goal.poses array */
         goal.poses[index].pose.position.x = x;
         goal.poses[index].pose.position.y = y;
         goal.poses[index].pose.position.z = 0;
@@ -83,7 +85,10 @@ BT::NodeStatus GoToPose::onStart() {
     {
         RCLCPP_ERROR(node_ptr_->get_logger(), "Action server not available after waiting");
     }
-    //sends the goal options
+    /*
+    sends the goal options. Note NAV2 indirectly moves the robot by updating /cmd_vel, which is then 
+    sent to the embedded code through crobot_hardware
+    */
     auto send_goal_options = rclcpp_action::Client<NavPoints>::SendGoalOptions();
     send_goal_options.result_callback = std::bind(&GoToPose::nav_to_pose_callback, this, std::placeholders::_1);
 

@@ -1,3 +1,5 @@
+# nav2 params file
+
 # amcl:
 #   ros__parameters:
 #     use_sim_time: false
@@ -17,11 +19,13 @@
 #     alpha5: 0.2
 #     transform_tolerance: 0.5
 
+# map to use
 map_server:
   ros__parameters:
     use_sim_time: false
     yaml_filename: "/home/ros/ws/src/crobot_gazebo/field/map.yaml"
 
+# planner to use. Creates the path
 planner_server:
   ros__parameters:
     use_sim_time: false
@@ -67,6 +71,7 @@ planner_server:
 #       #   w_cost: 0.02
       
 
+# controller to use. Defines how the robot follows the path
 controller_server:
   ros__parameters:
     use_sim_time: false
@@ -168,7 +173,7 @@ controller_server:
         repulsion_weight: 1.5
         near_goal_distance: 0.5
       
-
+# behavior tree configs. Sets the global and local costmap for the map
 bt_navigator:
   ros__parameters:
     use_sim_time: false
@@ -191,6 +196,7 @@ goal_checker:
     yaw_goal_tolerance: 0.25     # ~14 degrees
     stateful: true
 
+# how close the robot can get to an obstacle when creating path
 global_costmap:
   global_costmap:
     ros__parameters:
@@ -216,6 +222,7 @@ global_costmap:
         inflation_radius: 0.05 # radius of inflation around obstacles. Lower = less inflation but higher chance of accidental collision
         cost_scaling_factor: 0.5  # higher = steeper dropoff from obstacles
 
+# how close the robot can get to an obstacle it detects while running the path
 local_costmap:
   local_costmap:
     ros__parameters:

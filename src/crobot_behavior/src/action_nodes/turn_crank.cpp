@@ -1,5 +1,5 @@
+/* Node that turns the crank */
 #include "crobot_behavior/action_nodes/turn_crank.hpp"
-
 TurnCrank::TurnCrank(const std::string& name, const BT::NodeConfiguration& config, rclcpp::Node::SharedPtr node_ptr)
 : BT::StatefulActionNode(name, config), node_ptr_(node_ptr)
 {

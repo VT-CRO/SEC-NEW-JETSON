@@ -1,6 +1,9 @@
+/* 
+Defines the navigation server for custom pathplanning. Since we are using the default
+server provided by Nav2, this is unused.
+*/
 #include <chrono>
 #include "crobot_behavior/NavigationServer.hpp"
-
 NavigationServer::NavigationServer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
         : Node("crobot_navigation", options) {
             this->action_server_ = rclcpp_action::create_server<NavPoints>(
