@@ -1,6 +1,6 @@
+/* UNUSED */
 #include "crobot_behavior/action_nodes/update_footprint.hpp"
 #include <geometry_msgs/msg/point32.hpp>
-
 // ── Constructor ─────────────────────────────────────────────────────────────
 UpdateFootprint::UpdateFootprint(
     const std::string& name,

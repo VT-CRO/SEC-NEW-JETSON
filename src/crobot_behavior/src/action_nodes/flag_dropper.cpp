@@ -1,3 +1,4 @@
+/* Node to drop flag */
 #include "crobot_behavior/action_nodes/flag_dropper.hpp"
 #include <string>
 

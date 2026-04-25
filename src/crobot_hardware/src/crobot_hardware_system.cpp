@@ -1,5 +1,7 @@
+/**
+ * Manages the communication between the Jetson and the Teensie through JSON communication
+*/
 #include "crobot_hardware/crobot_hardware_system.hpp"
-
 #include <string>
 #include <algorithm>
 #include <nlohmann/json.hpp>
@@ -13,6 +15,11 @@ using namespace std;
 
 namespace crobot_hardware
 {
+    /**
+     * Initalizes the hardware interface
+     * 
+     * @param info the robot's information, passed in from TODO: INCLUDE LOCATION HERE
+    */
     hardware_interface::CallbackReturn CrobotHardware::on_init(
         const hardware_interface::HardwareInfo &info)
     {
@@ -69,93 +76,14 @@ namespace crobot_hardware
         gripper_.name = cfg_.gripper_name;
         flagdropper_.name = cfg_.flagdropper_name;
 
-        // for (const hardware_interface::ComponentInfo & joint : info_.joints)
-        // {
-        //     if (joint.command_interfaces.size() != 1)
-        //     {
-        //         RCLCPP_FATAL(
-        //             rclcpp::get_logger("CrobotHardware"),
-        //             "Joint '%s' has %zu command interfaces found. 1 expected.",
-        //             joint.name.c_str(),
-        //             joint.command_interfaces.size()
-        //         );
-
-        //         return hardware_interface::CallbackReturn::ERROR;
-        //     }
-
-        //     if (joint.state_interfaces.size() != 1)
-        //     {
-        //         RCLCPP_FATAL(
-        //             rclcpp::get_logger("CrobotHardware"),
-        //             "Joint '%s' has %zu state interfaces found. 1 expected.",
-        //             joint.name.c_str(),
-        //             joint.state_interfaces.size()
-        //         );
-
-        //         return hardware_interface::CallbackReturn::ERROR;
-        //     }
-
-        //     if (joint.name.find("ankle") != std::string::npos || joint.name.find("sweeper") != std::string::npos)
-        //     {
-        //         if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-        //         {
-        //             RCLCPP_FATAL(
-        //                 rclcpp::get_logger("CrobotHardware"),
-        //                 "Joint '%s' has '%s' command interface. '%s' expected.",
-        //                 joint.name.c_str(),
-        //                 joint.command_interfaces[0].name.c_str(),
-        //                 hardware_interface::HW_IF_POSITION
-        //             );
-
-        //             return hardware_interface::CallbackReturn::ERROR;
-        //         }
-
-        //         if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-        //         {
-        //             RCLCPP_FATAL(
-        //                 rclcpp::get_logger("CrobotHardware"),
-        //                 "Joint '%s' has '%s' state interface. '%s' expected.",
-        //                 joint.name.c_str(),
-        //                 joint.state_interfaces[0].name.c_str(),
-        //                 hardware_interface::HW_IF_POSITION
-        //             );
-
-        //             return hardware_interface::CallbackReturn::ERROR;
-        //         }
-        //     }
-        //     else if (joint.name.find("wheel") != std::string::npos || joint.name.find("winch") != std::string::npos)
-        //     {
-        //         if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY)
-        //         {
-        //             RCLCPP_FATAL(
-        //                 rclcpp::get_logger("CrobotHardware"),
-        //                 "Joint '%s' has '%s' command interface. '%s' expected.",
-        //                 joint.name.c_str(),
-        //                 joint.command_interfaces[0].name.c_str(),
-        //                 hardware_interface::HW_IF_VELOCITY
-        //             );
-
-        //             return hardware_interface::CallbackReturn::ERROR;
-        //         }
-
-        //         if (joint.state_interfaces[0].name != hardware_interface::HW_IF_VELOCITY)
-        //         {
-        //             RCLCPP_FATAL(
-        //                 rclcpp::get_logger("CrobotHardware"),
-        //                 "Joint '%s' has '%s' state interface. '%s' expected.",
-        //                 joint.name.c_str(),
-        //                 joint.state_interfaces[0].name.c_str(),
-        //                 hardware_interface::HW_IF_VELOCITY
-        //             );
-
-        //             return hardware_interface::CallbackReturn::ERROR;
-        //         }
-        //     }
-        // }
-
         return hardware_interface::CallbackReturn::SUCCESS;
     }
 
+    /**
+     * Export the current state of the wheels
+     * 
+     * @return the current state of the wheel, as a array vector of hardware_interface::StateInterface objects
+    */
     std::vector<hardware_interface::StateInterface> CrobotHardware::export_state_interfaces()
     {
         std::vector<hardware_interface::StateInterface> state_interfaces;
@@ -175,25 +103,14 @@ namespace crobot_hardware
         state_interfaces.emplace_back(hardware_interface::StateInterface(
             cfg_.imu_name, hardware_interface::HW_IF_VELOCITY, &imu_vel));
 
-        // for (auto & ankle : ankles_)
-        // {
-        //     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        //         ankle.name, hardware_interface::HW_IF_POSITION, &ankle.pos
-        //     ));
-        // }
-
-        // state_interfaces.emplace_back(hardware_interface::StateInterface(
-        //     sweeper_.name, hardware_interface::HW_IF_POSITION, &sweeper_.pos
-        // ));
-
-        // state_interfaces.emplace_back(hardware_interface::StateInterface(
-        //     winch_.name, hardware_interface::HW_IF_VELOCITY, &winch_.vel
-        // ));
-
 
         return state_interfaces;
     }
-
+    /**
+     * Exports the command interface for the robot to run commands
+     * 
+     * @return the current command interfaces, as a array vector of hardware_interface::CommandInterface objects
+    */
     std::vector<hardware_interface::CommandInterface> CrobotHardware::export_command_interfaces()
     {
         std::vector<hardware_interface::CommandInterface> command_interfaces;
@@ -232,6 +149,13 @@ namespace crobot_hardware
         return command_interfaces;
     }
 
+    /**
+     * Configures the robot. Runs after on_init()
+     * 
+     * @param previous_state the previous state of the robot. Unused since we do not track the current
+     *                       state of the robot between shutdowns.
+     * @return SUCCESS if successful, ERROR otherwise
+    */
     hardware_interface::CallbackReturn CrobotHardware::on_configure(
         const rclcpp_lifecycle::State &previous_state)
     {
@@ -280,6 +204,12 @@ namespace crobot_hardware
         return hardware_interface::CallbackReturn::SUCCESS;
     }
 
+    /**
+     * Cleanups the hardware interface on shutdown
+     * 
+     * @param previous_state the previous state of the robot. Unused
+     * @return SUCCESS if successful, ERROR otherwise
+    */
     hardware_interface::CallbackReturn CrobotHardware::on_cleanup(
         const rclcpp_lifecycle::State &previous_state)
     {
@@ -291,7 +221,13 @@ namespace crobot_hardware
 
         return hardware_interface::CallbackReturn::SUCCESS;
     }
-
+    
+    /**
+     * Runs once when the robot is activated. Sets the starting values of the robot. Runs after on_configure()
+     * 
+     * @param previous_state the previous state of the robot. Unused
+     * @return SUCCESS if successful, ERROR otherwise
+    */
     hardware_interface::CallbackReturn CrobotHardware::on_activate(
         const rclcpp_lifecycle::State &previous_state)
     {
@@ -299,7 +235,6 @@ namespace crobot_hardware
         first_read_ = true; // Reset first read flag on activation
         last_ticks_fl_ = 0;
         last_ticks_fr_ = 0;
-        // last_ticks_br_ = 0;
 
         for (int i = 0; i < 4; ++i)
         {
@@ -317,7 +252,6 @@ namespace crobot_hardware
         winch_.vel = 0.0;
         winch_.cmd = 0.0;
 
-        // I don't know how much I trust this, but I'm gonna roll with it!
         shoulder_.pos = 0.0;
         shoulder_.cmd = 0.0;
 
@@ -332,7 +266,12 @@ namespace crobot_hardware
 
         return hardware_interface::CallbackReturn::SUCCESS;
     }
-
+    /**
+     * Runs once when the robot is shutdown.
+     * 
+     * @param previous_state the previous state of the robot. Unused
+     * @return SUCCESS if successful, ERROR otherwise
+    */
     hardware_interface::CallbackReturn CrobotHardware::on_deactivate(
         const rclcpp_lifecycle::State &previous_state)
     {
@@ -340,6 +279,15 @@ namespace crobot_hardware
         return hardware_interface::CallbackReturn::SUCCESS;
     }
 
+    /**
+     * Reads the data from the Teensie in order to update the state interfaces of the robot.
+     * Data is transferred as a JSON file from the Teensie to the Jetson
+     * 
+     * @param time the current elapsed time of the robot since startup
+     * @param period the current elapsed time of the hardawre interface since communication with the Teensie
+     * 
+     * @return SUCCESS if successful, ERROR otherwise
+    */
     hardware_interface::return_type CrobotHardware::read(
         const rclcpp::Time &time, const rclcpp::Duration &period)
     {
@@ -348,11 +296,7 @@ namespace crobot_hardware
             return hardware_interface::return_type::ERROR;
         }
 
-        // json j;
-        // j["cmd"] = "read";
-        // std::string j_str = j.dump() + "\n";
-        // serial_comm_.writeBytes(j_str.c_str(), j_str.size());
-
+        //reads the JSON file from the teensie as a string.
         std::string line = serial_comm_.readLine();
 
         if (!line.empty())
@@ -363,8 +307,7 @@ namespace crobot_hardware
 
                 if (response.contains("encoders"))
                 {
-                    // std::string response_str = response.dump() + "\n";
-                    // RCLCPP_INFO(rclcpp::get_logger("CrobotHardware"), "We received encoders data: %s", response_str.c_str());
+                    //the gear ratio. 4096 internal rotation for one wheel rotation
                     const double COUNTS_PER_REV = 4096.0;
                     const double TWO_PI = 2.0 * M_PI;
                     const double dt = period.seconds();
@@ -373,6 +316,7 @@ namespace crobot_hardware
                     int32_t ticks_fr = response["encoders"]["front_right"];
                     // int32_t ticks_br = response["encoders"]["back_right"];
 
+                    
                     wheels_[0].pos = (ticks_fl / COUNTS_PER_REV) * TWO_PI;
                     wheels_[1].pos = (ticks_fr / COUNTS_PER_REV) * TWO_PI;
                     // wheels_[2].pos = wheels_[0].pos;
@@ -385,9 +329,10 @@ namespace crobot_hardware
                         // wheels_[3].vel = ((ticks_br - last_ticks_br_) / COUNTS_PER_REV) * TWO_PI / dt;
                         wheels_[2].vel = wheels_[0].vel;
                     }
+
+                    //ensures that the wheel positions aren't accidently updated twice in one tick
                     last_ticks_fl_ = ticks_fl;
                     last_ticks_fr_ = ticks_fr;
-                    // last_ticks_br_ = ticks_br;
                     first_read_ = false;
                 }
 
@@ -450,6 +395,14 @@ namespace crobot_hardware
         return hardware_interface::return_type::OK;
     }
 
+    /**
+     * Writes to the teensie to execute commands
+     * 
+     * @param time the current elapsed time of the robot since startup
+     * @param period the current elapsed time of the hardawre interface since communication with the Teensie
+     * 
+     * @return SUCCESS if successful, ERROR otherwise
+    */
     hardware_interface::return_type CrobotHardware::write(
         const rclcpp::Time &time, const rclcpp::Duration &period)
     {
@@ -464,8 +417,8 @@ namespace crobot_hardware
         }
 
         json j;
-        // j["cmd"] = "write";
 
+        /* Writes to the "cmd" key for the teensie to execute*/
         if (embedded_mode_ == EmbeddedMode::CRATER_RUN) {
             j["cmd"] = "craterRun";
         } else if (embedded_mode_ == EmbeddedMode::LAUNCH_DRONE) {
@@ -479,7 +432,7 @@ namespace crobot_hardware
 
             const double RAD_TO_DEG = 180.0 / M_PI;
             const float hardware_conversion_factor = 0.9;
-
+            /* Writes to the wheel states */
             j["ankles"]["front_left"] = (int)(130.0 + ankles_[0].cmd * RAD_TO_DEG / hardware_conversion_factor);
             j["ankles"]["front_right"] = (int)(53.0 + ankles_[1].cmd * RAD_TO_DEG / hardware_conversion_factor);
             j["ankles"]["back_left"] = (int)(57.0 + ankles_[2].cmd * RAD_TO_DEG / hardware_conversion_factor);
@@ -495,8 +448,6 @@ namespace crobot_hardware
             j["sweeper"] = (int)(40.0 + sweeper_.cmd * RAD_TO_DEG);
             j["winch"] = std::clamp((int)(winch_.cmd * 255.0), -255, 255);
 
-            // You may want to take the time to validate how I define these, I'm really freaking tired :(
-            // I have code in Crobot.ino that defines my thoughts a bit more clearly- probably worth a read?
             j["flag"] = (int)(80.0 + flagdropper_.cmd * RAD_TO_DEG); // initial value + angle change(?)
             j["shoulder"] = (int)(shoulder_.cmd * RAD_TO_DEG);       // Just our desired angle?
             j["elbow"] = (int)(180.0 - shoulder_.cmd * RAD_TO_DEG);   // initial value - angle change(?)
@@ -506,8 +457,7 @@ namespace crobot_hardware
 
         std::string j_str = j.dump() + "\n";
 
-        // RCLCPP_INFO(rclcpp::get_logger("CrobotHardware"), "Sending JSON: %s", j_str.c_str());
-        // RCLCPP_INFO(rclcpp::get_logger("CrobotHardware"), "Sweeper position: %d", (int)(40.0 + sweeper_.cmd * RAD_TO_DEG));
+        /* Sends the JSON file over to the hardware through UART (?)*/
 
         int bytesSent = serial_comm_.writeBytes(j_str.c_str(), j_str.size());
 

@@ -1,5 +1,5 @@
+/* Node that publishes specific subscriptions */
 #include "crobot_behavior/action_nodes/embedded_mode.hpp"
-
 EmbeddedModeControl::EmbeddedModeControl(const std::string& name, const BT::NodeConfiguration& config, rclcpp::Node::SharedPtr node_ptr)
 : BT::StatefulActionNode(name, config), node_ptr_(node_ptr)
 {

@@ -1,3 +1,4 @@
+/* Node for duck detection */
 #include <behaviortree_cpp/behavior_tree.h>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>

@@ -1,11 +1,14 @@
+/**
+ * Organizes the behavior tree
+*/
 #include "behaviortree_cpp_v3/bt_factory.h"
 #include <rclcpp/rclcpp.hpp>
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include <string>
 
-// Nodes
+/* Nodes */
 #include "crobot_behavior/action_nodes/go_to_pose.hpp"
-#include "crobot_behavior/action_nodes/press_button.hpp"   // <-- ADD THIS
+#include "crobot_behavior/action_nodes/press_button.hpp"  
 #include "crobot_behavior/NavigationServer.hpp"
 #include "crobot_behavior/action_nodes/sweeper_controls.hpp"
 #include "crobot_behavior/action_nodes/update_footprint.hpp"
@@ -17,6 +20,7 @@
 #include "crobot_behavior/action_nodes/flag_dropper.hpp"
 #include "crobot_behavior/action_nodes/wait_seconds.hpp"
 
+
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
@@ -25,6 +29,10 @@ int main(int argc, char** argv)
 
   auto stop_pub = node->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
 
+  /**
+   * Initializes the factory. This is where each node gets converted into a
+   * command for the behavior tree to use
+  */
   BT::BehaviorTreeFactory factory;
 
   // --- Register GoToPose ---
@@ -54,7 +62,7 @@ int main(int argc, char** argv)
     }
   );
 
-  // --- Register PressButton ---                          // <-- ADD THIS BLOCK
+  // --- Register PressButton ---                          
   factory.registerBuilder<PressButton>(
     "PressButton",
     [node](const std::string& name, const BT::NodeConfiguration& config)
@@ -105,6 +113,7 @@ int main(int argc, char** argv)
     }
   );
 
+  /* Register a wait command */
   factory.registerBuilder<WaitSeconds>(
     "WaitSeconds",
     [node](const std::string& name, const BT::NodeConfiguration& config)
@@ -113,6 +122,7 @@ int main(int argc, char** argv)
     }
   );
 
+  /* Behavior tree to follow */
   std::string pkg_path =
     ament_index_cpp::get_package_share_directory("crobot_behavior");
 
@@ -122,6 +132,7 @@ int main(int argc, char** argv)
 
   rclcpp::Rate rate(20);
   
+  /* Ticks the behavior tree at the above rate in milliseconds */
   while (rclcpp::ok()) {
     BT::NodeStatus status = tree.tickRoot();
 

@@ -1,3 +1,5 @@
+# file that filters data recieved by sensors
+
 # ekf_filter_node:
 #   ros__parameters:
 #     frequency: 30.0

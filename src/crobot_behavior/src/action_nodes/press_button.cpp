@@ -1,8 +1,5 @@
+/* Moves the robot in a timed-base manner autonomously */
 #include "crobot_behavior/action_nodes/press_button.hpp"
-
-// ============================================================================
-// Constructor
-// ============================================================================
 
 PressButton::PressButton(
     const std::string& name,
@@ -15,10 +12,6 @@ PressButton::PressButton(
     cmd_vel_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
 }
 
-// ============================================================================
-// Ports
-// All ports are optional with defaults so the XML stays clean.
-// ============================================================================
 
 BT::PortsList PressButton::providedPorts()
 {
@@ -32,9 +25,6 @@ BT::PortsList PressButton::providedPorts()
     };
 }
 
-// ============================================================================
-// onStart — called once when the BT first activates this node
-// ============================================================================
 
 BT::NodeStatus PressButton::onStart()
 {
@@ -59,12 +49,6 @@ BT::NodeStatus PressButton::onStart()
     return BT::NodeStatus::RUNNING;
 }
 
-// ============================================================================
-// onRunning — called every BT tick (~50ms) while this node is active.
-//
-// This is the state machine. Each phase publishes a velocity command and
-// waits until enough wall-clock time has elapsed, then transitions.
-// ============================================================================
 
 BT::NodeStatus PressButton::onRunning()
 {
@@ -144,10 +128,6 @@ BT::NodeStatus PressButton::onRunning()
     return BT::NodeStatus::RUNNING;
 }
 
-// ============================================================================
-// onHalted — called if the BT cancels this node (e.g., a parallel watchdog
-// fires, or the parent Sequence fails). Always stop the robot.
-// ============================================================================
 
 void PressButton::onHalted()
 {
@@ -156,10 +136,7 @@ void PressButton::onHalted()
     phase_ = Phase::PRESSING_FORWARD;  // Reset so re-activation starts fresh
 }
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
+// helper methods 
 void PressButton::publishVelocity(double linear_x)
 {
     geometry_msgs::msg::Twist msg;
